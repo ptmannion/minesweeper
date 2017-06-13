@@ -1,20 +1,19 @@
 import random
 import pdb
 
-MINE_DENSITY = 0.20 # based on online game 16x30 board with 99 mines
+MINE_DENSITY = 0.20
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 10
 
-def create_mask(value,size):
+def create_mask(value):
     ''' reate mask as list of lists (list of rows) of repeated value input '''
-    height, width = size
 
     if type(value) != int:
         raise ValueError('Mask value must be int.')
 
     mask = []
-    for r in range(0,height):
-        row = [value] * width
+    for r in range(0,BOARD_HEIGHT):
+        row = [value] * BOARD_WIDTH
         mask.append(row)
 
     return mask
@@ -42,20 +41,18 @@ def get_neighbors(r,c):
 
     return valid_neighbors
 
-def create_board(size):
+def create_board():
     '''create board with mines and adjacency counts, plus full mask'''
-
-    height, width = size
 
     # create board as list of lists (list of rows)
     board = []
-    for r in range(0,height):
-        row = ["0"] * width
+    for r in range(0,BOARD_HEIGHT):
+        row = ["0"] * BOARD_WIDTH
         board.append(row)
 
     # place mines
-    for r in range(0,height):
-        for c in range(0,width):
+    for r in range(0,BOARD_HEIGHT):
+        for c in range(0,BOARD_WIDTH):
             v = random.randint(1,1/MINE_DENSITY)
             if v == 1:
                 has_mine = True
@@ -66,8 +63,8 @@ def create_board(size):
                 board[r][c] = "*"
 
     # count adjacent mines
-    for r in range(0,height):
-        for c in range(0,width):
+    for r in range(0,BOARD_HEIGHT):
+        for c in range(0,BOARD_WIDTH):
             if board[r][c] == "*":
                 continue
 
@@ -84,12 +81,8 @@ def create_board(size):
 
     return board
 
-def get_input(size):
+def get_input():
     ''' get user input of column and row number '''
-
-    height, width = size
-
-    # TODO check that move has not already been played
 
     print "Select a block to click (format: row,column): "
     user_input = raw_input()
@@ -99,15 +92,19 @@ def get_input(size):
         r = int(r)
         c = int(c)
 
+        if mask[r][c] == 0:
+            print "This block has already been clicked. Try again:"
+            move = get_input()
+
         if not valid_space(r,c):
             print "Your move is not on the board. Try again:"
-            move = get_input(size)
+            move = get_input()
         else:
             move = (r,c)
 
     except ValueError:
          print "Please use the format specified, e.g., '0,0'"
-         move = get_input(size)
+         move = get_input()
 
     return move
 
@@ -155,24 +152,24 @@ def print_board(board,mask):
 
     # print column labels
     print " " * 6,
-    for c in range(0,width):
+    for c in range(0,BOARD_WIDTH):
         spacing = 3 - len(str(c))
         print "  %i%s" % (c,spacing*" "),
     print "" # newline
 
     print " " * 6,
-    for c in range(0,width):
+    for c in range(0,BOARD_WIDTH):
         print "_____",
     print "" # newline
 
 
-    for r in range(0,height):
+    for r in range(0,BOARD_HEIGHT):
         # print row labels
         spacing = 3 - len(str(r))
         print "  %i%s|" % (r,spacing*" "),
 
         # print row contents
-        for c in range(0,width):
+        for c in range(0,BOARD_WIDTH):
             # only print row if mask is 0, not 1
             if mask[r][c] == 0:
                 block = board[r][c]
@@ -185,16 +182,11 @@ def print_board(board,mask):
 
 
 if __name__ == "__main__":
-    # TODO clean up global height/width usage
 
-    size = (BOARD_HEIGHT,BOARD_WIDTH)
-    width = BOARD_WIDTH
-    height = BOARD_HEIGHT
-
-    board = create_board(size)
-    mask = create_mask(1,size)
+    board = create_board()
+    mask = create_mask(1)
 
     while True:
          print_board(board,mask)
-         move = get_input(size)
+         move = get_input()
          mask = update_mask(board,mask,move)
