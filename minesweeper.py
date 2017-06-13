@@ -1,3 +1,5 @@
+import random
+
 MINE_DENSITY = 0.20 # based on online game 16x30 board with 99 mines
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 10
@@ -9,11 +11,54 @@ def create_board(size):
     # create board as list of lists (list of rows)
     board = []
     for r in range(0,height):
-        row = [0] * width
+        row = ["0"] * width
         board.append(row)
 
     # place mines
+    for r in range(0,height):
+        for c in range(0,width):
+            v = random.randint(1,1/MINE_DENSITY)
+            if v == 1:
+                has_mine = True
+            else:
+                has_mine = False
+
+            if has_mine:
+                board[r][c] = "*"
+
     # count adjacent mines
+    for r in range(0,height):
+        for c in range(0,width):
+            if board[r][c] == "*":
+                continue
+
+            # enumerate neighbor coords clockwise from top
+            neighbors = [(r-1,c),
+            (r-1,c+1),
+            (r,c+1),
+            (r+1,c+1),
+            (r+1,c),
+            (r+1,c-1),
+            (r,c-1),
+            (r-1,c-1)
+            ]
+
+            # count neighboring mines and use to update block
+            count = 0
+            for nr,nc in neighbors:
+                if nr < 0 | nc < 0:
+                    # case of board edge causing negative index
+                    continue
+
+                try:
+                    if board[nr][nc] == "*":
+                        count += 1
+                except IndexError:
+                    # case of board edge causing too large index
+                    pass
+
+            board[r][c] = str(count)
+
     return board
 
 def get_input():
@@ -37,7 +82,8 @@ def print_board(board):
     # print column labels
     print " " * 6,
     for c in range(0,width):
-        print "  %s  " % c,
+        spacing = 3 - len(str(c))
+        print "  %i%s" % (c,spacing*" "),
     print "" # newline
 
     print " " * 6,
@@ -47,11 +93,12 @@ def print_board(board):
 
     # print row labels
     for r in range(0,height):
-        print "  %i  |" % r,
+        spacing = 3 - len(str(r))
+        print "  %i%s|" % (r,spacing*" "),
         row = board[r]
         for c in range(0,width):
             block = row[c]
-            print "  %i  " % block,
+            print "  %s  " % block,
         print "" # newline
 
 
