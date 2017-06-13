@@ -1,6 +1,16 @@
-import random
 import pdb
+import random
+import os
+import sys
 
+# TODO
+# add ability to flag mines
+# add score
+# add timer
+# hitting mine only reveals other mines
+# rows are labeled by letters e.g., A4
+
+# Default globals - can be reset with commandline params
 MINE_DENSITY = 0.20
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 10
@@ -84,8 +94,18 @@ def create_board():
 def get_input():
     ''' get user input of column and row number '''
 
-    print "Select a block to click (format: row,column): "
+    print "\nEnter row,col to click, f#,# to flag or u#,# to unflag."
     user_input = raw_input()
+
+    move_type = 'click' # set default
+
+    if user_input[0] == 'f':
+        move_type = 'flag'
+        print "flag alert"
+        user_input = user_input[1:]
+    if user_input[0] == 'u':
+        move_type = 'unflag'
+        user_input = user_input[1:]
 
     try:
         r,c = user_input.split(",")
@@ -106,7 +126,8 @@ def get_input():
          print "Please use the format specified, e.g., '0,0'"
          move = get_input()
 
-    return move
+    print (move,move_type)
+    return (move,move_type)
 
 def recursive_clear(r,c,mask):
     if mask[r][c] == 0:
@@ -128,27 +149,32 @@ def recursive_clear(r,c,mask):
 
     return mask
 
-def update_mask(board,mask,move):
+def update_mask(board,mask,move,move_type):
     r,c = move
 
     # if coordinates are a mine, game over
-    if board[r][c] == "*":
-        clear_mask = create_mask(0)
-        print_board(board,clear_mask)
+    if move_type == 'click':
+        if board[r][c] == "*":
+            clear_mask = create_mask(0)
+            print_board(board,clear_mask)
 
-        print "Game over!"
-        quit()
+            print "Game over!"
+            quit()
 
-    else:
-        mask = recursive_clear(r,c,mask)
+        else:
+            mask = recursive_clear(r,c,mask)
+    elif move_type == 'flag':
+        mask[r][c] = 2
+    elif move_type == 'unflag':
+        mask[r][c] = 1
 
     return mask
 
 def print_board(board,mask):
-    # print board with column and row numbers
-    # distinguish between revealed and non-revealed squares
-    height = len(board)
-    width = len(board[0])
+    ''' print board, given mask, with column and row numbers '''
+
+    # clear console window
+    # os.system('clear')
 
     # print column labels
     print " " * 6,
@@ -175,18 +201,23 @@ def print_board(board,mask):
                 block = board[r][c]
             elif mask[r][c] == 1:
                 block = " "
-            else:
-                raise ValueError('Mask value must be 0 or 1.')
+            elif mask[r][c] == 2:
+                block = "F"
             print "  %s  " % block,
         print "" # newline
 
-
 if __name__ == "__main__":
+
+    if len(sys.argv) > 2:
+        BOARD_WIDTH = int(sys.argv[1])
+        BOARD_HEIGHT = int(sys.argv[2])
+    if len(sys.argv) > 3:
+        MINE_DENSITY = float(sys.argv[3])
 
     board = create_board()
     mask = create_mask(1)
 
     while True:
          print_board(board,mask)
-         move = get_input()
-         mask = update_mask(board,mask,move)
+         move,move_type = get_input()
+         mask = update_mask(board,mask,move,move_type)
