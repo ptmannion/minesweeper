@@ -8,6 +8,12 @@ def create_board(size):
     width, height = size
     area = width * height
 
+    # create mask as list of lists (list of rows)
+    mask = []
+    for r in range(0,height):
+        row = [1] * width
+        mask.append(row)
+
     # create board as list of lists (list of rows)
     board = []
     for r in range(0,height):
@@ -59,7 +65,7 @@ def create_board(size):
 
             board[r][c] = str(count)
 
-    return board
+    return (board,mask)
 
 def get_input():
     # get column and row number
@@ -73,7 +79,7 @@ def update_board(move):
         # if number, clear that space and stop
     pass
 
-def print_board(board):
+def print_board(board,mask):
     # print board with column and row numbers
     # distinguish between revealed and non-revealed squares
     height = len(board)
@@ -91,21 +97,26 @@ def print_board(board):
         print "_____",
     print "" # newline
 
-    # print row labels
+
     for r in range(0,height):
+        # print row labels
         spacing = 3 - len(str(r))
         print "  %i%s|" % (r,spacing*" "),
-        row = board[r]
+
+        # print row contents
         for c in range(0,width):
-            block = row[c]
+            if mask[r][c] != 1:
+                block = board[r][c]
+            else:
+                block = "?"
             print "  %s  " % block,
         print "" # newline
 
 
 if __name__ == "__main__":
     size = (BOARD_WIDTH,BOARD_HEIGHT)
-    board = create_board(size)
-    print_board(board)
+    board,mask = create_board(size)
+    print_board(board,mask)
 
     # while gameplay == True:
     #     print_board(board)
