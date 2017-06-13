@@ -2,17 +2,19 @@ import pdb
 import random
 import os
 import sys
+import time
+from termcolor import colored
 
 # TODO
-# add mine count
-# add timer
-# hitting mine only reveals other mines
 # rows are labeled by letters e.g., A4
+# print in color
+# add ability to win game
 
 # Default globals - can be reset with commandline params
 MINE_DENSITY = 0.20
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 10
+START_TIME = time.time()
 
 def create_mask(value):
     ''' create mask as list of lists (list of rows) of repeated value input '''
@@ -61,12 +63,14 @@ def create_board():
 
     # place mines
     mine_count = 0
+    mine_locations = []
     for r in range(0,BOARD_HEIGHT):
         for c in range(0,BOARD_WIDTH):
             v = random.randint(1,1/MINE_DENSITY)
             if v == 1:
                 has_mine = True
                 mine_count += 1
+                mine_locations.append((r,c))
             else:
                 has_mine = False
 
@@ -90,7 +94,7 @@ def create_board():
 
             board[r][c] = str(count)
 
-    return (board,mine_count)
+    return (board,mine_count,mine_locations)
 
 def get_input():
     ''' get user input of column and row number '''
@@ -156,10 +160,11 @@ def update_mask(board,mask,move,move_type,mine_count):
         if board[r][c] == "*":
             os.system('clear')
 
-            clear_mask = create_mask(0)
-            print_board(board,clear_mask,mine_count)
+            for mr,mc in mine_locations:
+                mask[mr][mc] = 0
+            print_board(board,mask,mine_count)
 
-            print "Game over!"
+            print colored('Game over!','red')
             quit()
 
         else:
@@ -177,7 +182,8 @@ def print_board(board,mask,mine_count):
     ''' print board, given mask, with column and row numbers '''
 
     # print mine count and timer
-    print "Mines remaining: %i \t\t Time elapsed: " % mine_count
+    seconds_passed = int(time.time() - START_TIME)
+    print "Mines remaining: %i \t\t Time elapsed (sec): %i" % (mine_count, seconds_passed)
 
     # print column labels
     print " " * 6,
@@ -201,12 +207,19 @@ def print_board(board,mask,mine_count):
         for c in range(0,BOARD_WIDTH):
             # only print row if mask is 0, not 1
             if mask[r][c] == 0:
-                block = board[r][c]
+                value = board[r][c]
+                block = '  %s  ' % value
+                if value == '*':
+                    print colored(block,'red'),
+                else:
+                    print colored(block,'green'),
+
             elif mask[r][c] == 1:
-                block = " "
+                block = "     "
+                print block,
             elif mask[r][c] == 2:
-                block = "F"
-            print "  %s  " % block,
+                block = "  F  "
+                print colored(block,'red'),
         print "" # newline
 
 if __name__ == "__main__":
@@ -217,7 +230,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 3:
         MINE_DENSITY = float(sys.argv[3])
 
-    board,mine_count = create_board()
+    board,mine_count,mine_locations = create_board()
     mask = create_mask(1)
 
     while True:
