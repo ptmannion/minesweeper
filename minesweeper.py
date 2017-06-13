@@ -4,8 +4,7 @@ import os
 import sys
 
 # TODO
-# add ability to flag mines
-# add score
+# add mine count
 # add timer
 # hitting mine only reveals other mines
 # rows are labeled by letters e.g., A4
@@ -61,11 +60,13 @@ def create_board():
         board.append(row)
 
     # place mines
+    mine_count = 0
     for r in range(0,BOARD_HEIGHT):
         for c in range(0,BOARD_WIDTH):
             v = random.randint(1,1/MINE_DENSITY)
             if v == 1:
                 has_mine = True
+                mine_count += 1
             else:
                 has_mine = False
 
@@ -89,7 +90,7 @@ def create_board():
 
             board[r][c] = str(count)
 
-    return board
+    return (board,mine_count)
 
 def get_input():
     ''' get user input of column and row number '''
@@ -101,7 +102,6 @@ def get_input():
 
     if user_input[0] == 'f':
         move_type = 'flag'
-        print "flag alert"
         user_input = user_input[1:]
     if user_input[0] == 'u':
         move_type = 'unflag'
@@ -126,7 +126,6 @@ def get_input():
          print "Please use the format specified, e.g., '0,0'"
          move = get_input()
 
-    print (move,move_type)
     return (move,move_type)
 
 def recursive_clear(r,c,mask):
@@ -149,14 +148,16 @@ def recursive_clear(r,c,mask):
 
     return mask
 
-def update_mask(board,mask,move,move_type):
+def update_mask(board,mask,move,move_type,mine_count):
     r,c = move
 
     # if coordinates are a mine, game over
     if move_type == 'click':
         if board[r][c] == "*":
+            os.system('clear')
+
             clear_mask = create_mask(0)
-            print_board(board,clear_mask)
+            print_board(board,clear_mask,mine_count)
 
             print "Game over!"
             quit()
@@ -165,16 +166,18 @@ def update_mask(board,mask,move,move_type):
             mask = recursive_clear(r,c,mask)
     elif move_type == 'flag':
         mask[r][c] = 2
+        mine_count -= 1
     elif move_type == 'unflag':
         mask[r][c] = 1
+        mine_count += 1
 
-    return mask
+    return mask,mine_count
 
-def print_board(board,mask):
+def print_board(board,mask,mine_count):
     ''' print board, given mask, with column and row numbers '''
 
-    # clear console window
-    # os.system('clear')
+    # print mine count and timer
+    print "Mines remaining: %i \t\t Time elapsed: " % mine_count
 
     # print column labels
     print " " * 6,
@@ -214,10 +217,13 @@ if __name__ == "__main__":
     if len(sys.argv) > 3:
         MINE_DENSITY = float(sys.argv[3])
 
-    board = create_board()
+    board,mine_count = create_board()
     mask = create_mask(1)
 
     while True:
-         print_board(board,mask)
-         move,move_type = get_input()
-         mask = update_mask(board,mask,move,move_type)
+        # clear console window
+        os.system('clear')
+
+        print_board(board,mask,mine_count)
+        move,move_type = get_input()
+        mask,mine_count = update_mask(board,mask,move,move_type,mine_count)
