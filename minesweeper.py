@@ -5,17 +5,47 @@ MINE_DENSITY = 0.20 # based on online game 16x30 board with 99 mines
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 10
 
+def create_mask(value,size):
+    ''' reate mask as list of lists (list of rows) of repeated value input '''
+    height, width = size
+
+    if type(value) != int:
+        raise ValueError('Mask value must be int.')
+
+    mask = []
+    for r in range(0,height):
+        row = [value] * width
+        mask.append(row)
+
+    return mask
+
+def valid_space(r,c):
+    valid_row = (r >= 0) & (r < BOARD_HEIGHT)
+    valid_col = (c >= 0) & (c < BOARD_WIDTH)
+    return valid_row & valid_col
+
+def get_neighbors(r,c):
+    neighbors = [(r-1,c),
+    (r-1,c+1),
+    (r,c+1),
+    (r+1,c+1),
+    (r+1,c),
+    (r+1,c-1),
+    (r,c-1),
+    (r-1,c-1)
+    ]
+
+    valid_neighbors = []
+    for r,c in neighbors:
+        if valid_space(r,c):
+            valid_neighbors.append((r,c))
+
+    return valid_neighbors
+
 def create_board(size):
     '''create board with mines and adjacency counts, plus full mask'''
 
-    width, height = size
-    area = width * height
-
-    # create mask as list of lists (list of rows)
-    mask = []
-    for r in range(0,height):
-        row = [1] * width
-        mask.append(row)
+    height, width = size
 
     # create board as list of lists (list of rows)
     board = []
@@ -42,38 +72,24 @@ def create_board(size):
                 continue
 
             # enumerate neighbor coords clockwise from top
-            neighbors = [(r-1,c),
-            (r-1,c+1),
-            (r,c+1),
-            (r+1,c+1),
-            (r+1,c),
-            (r+1,c-1),
-            (r,c-1),
-            (r-1,c-1)
-            ]
+            valid_neighbors = get_neighbors(r,c)
 
             # count neighboring mines and use to update block
             count = 0
-            for nr,nc in neighbors:
-                if nr < 0 | nc < 0:
-                    # case of board edge causing negative index
-                    continue
-
-                try:
+            for nr,nc in valid_neighbors:
                     if board[nr][nc] == "*":
                         count += 1
-                except IndexError:
-                    # case of board edge causing too large index
-                    pass
 
             board[r][c] = str(count)
 
-    return (board,mask)
+    return board
 
 def get_input(size):
     ''' get user input of column and row number '''
 
-    width, height = size
+    height, width = size
+
+    # TODO check that move has not already been played
 
     print "Select a block to click (format: row,column): "
     user_input = raw_input()
@@ -83,11 +99,8 @@ def get_input(size):
         r = int(r)
         c = int(c)
 
-        if r >= height:
-            print "Maximum row value is %i. Try again:" % (height-1)
-            move = get_input(size)
-        elif c >= width:
-            print "Maximum column value is %i. Try again:" % (width-1)
+        if not valid_space(r,c):
+            print "Your move is not on the board. Try again:"
             move = get_input(size)
         else:
             move = (r,c)
@@ -98,13 +111,41 @@ def get_input(size):
 
     return move
 
-def update_board(move):
+def recursive_clear(r,c,mask):
+    if mask[r][c] == 0:
+        # if already clear, move on
+        return mask
+
+    if int(board[r][c]) >= 1:
+        # reveal number square
+        mask[r][c] = 0
+        return mask
+
+    elif int(board[r][c]) == 0:
+        # reveal blank square and neighbors up to number
+        mask[r][c] = 0
+        valid_neighbors = get_neighbors(r,c)
+
+        for nr,nc in valid_neighbors:
+            mask = recursive_clear(nr,nc,mask)
+
+    return mask
+
+def update_mask(board,mask,move):
+    r,c = move
+
     # if coordinates are a mine, game over
-    # elif number, reveal that square only
-    # elif blank, reveal adjacent area up to numbers
-        # if blank, go out one step in each direction (recursive)
-        # if number, clear that space and stop
-    pass
+    if board[r][c] == "*":
+        clear_mask = create_mask(0,size)
+        print_board(board,clear_mask)
+
+        print "Game over!"
+        quit()
+
+    else:
+        mask = recursive_clear(r,c,mask)
+
+    return mask
 
 def print_board(board,mask):
     # print board with column and row numbers
@@ -132,21 +173,28 @@ def print_board(board,mask):
 
         # print row contents
         for c in range(0,width):
-            if mask[r][c] != 1:
+            # only print row if mask is 0, not 1
+            if mask[r][c] == 0:
                 block = board[r][c]
+            elif mask[r][c] == 1:
+                block = " "
             else:
-                block = "?"
+                raise ValueError('Mask value must be 0 or 1.')
             print "  %s  " % block,
         print "" # newline
 
 
 if __name__ == "__main__":
-    size = (BOARD_WIDTH,BOARD_HEIGHT)
-    board,mask = create_board(size)
-    print_board(board,mask)
-    get_input(size)
+    # TODO clean up global height/width usage
 
-    # while gameplay == True:
-    #     print_board(board)
-    #     move = get_input()
-    #     board = update_board(move)
+    size = (BOARD_HEIGHT,BOARD_WIDTH)
+    width = BOARD_WIDTH
+    height = BOARD_HEIGHT
+
+    board = create_board(size)
+    mask = create_mask(1,size)
+
+    while True:
+         print_board(board,mask)
+         move = get_input(size)
+         mask = update_mask(board,mask,move)
