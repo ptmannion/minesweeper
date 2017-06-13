@@ -5,13 +5,11 @@ import sys
 import time
 from termcolor import colored
 
-# TODO
-# add ability to win game
-
 # Default globals - can be reset with commandline params
 MINE_DENSITY = 0.20
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 10
+
 START_TIME = time.time()
 
 def create_mask(value):
