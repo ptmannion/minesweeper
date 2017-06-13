@@ -6,8 +6,6 @@ import time
 from termcolor import colored
 
 # TODO
-# rows are labeled by letters e.g., A4
-# print in color
 # add ability to win game
 
 # Default globals - can be reset with commandline params
@@ -30,11 +28,15 @@ def create_mask(value):
     return mask
 
 def valid_space(r,c):
+    ''' check if a set of coordinates is valid on the board '''
+
     valid_row = (r >= 0) & (r < BOARD_HEIGHT)
     valid_col = (c >= 0) & (c < BOARD_WIDTH)
     return valid_row & valid_col
 
 def get_neighbors(r,c):
+    ''' get coords of neighboring cells that are valid on the board '''
+
     neighbors = [(r-1,c),
     (r-1,c+1),
     (r,c+1),
@@ -133,17 +135,19 @@ def get_input():
     return (move,move_type)
 
 def recursive_clear(r,c,mask):
+    ''' remove mask from cell and adjacent cells as needed on click '''
+
     if mask[r][c] == 0:
-        # if already clear, move on
+        # base case - cell already cleared
         return mask
 
     if int(board[r][c]) >= 1:
-        # reveal number square
+        # base case - number cell at edge of area to clear
         mask[r][c] = 0
         return mask
 
     elif int(board[r][c]) == 0:
-        # reveal blank square and neighbors up to number
+        # recursive case - blank cell, need to clear neighbors
         mask[r][c] = 0
         valid_neighbors = get_neighbors(r,c)
 
@@ -155,9 +159,9 @@ def recursive_clear(r,c,mask):
 def update_mask(board,mask,move,move_type,mine_count):
     r,c = move
 
-    # if coordinates are a mine, game over
     if move_type == 'click':
         if board[r][c] == "*":
+            # game over
             os.system('clear')
 
             for mr,mc in mine_locations:
@@ -166,8 +170,8 @@ def update_mask(board,mask,move,move_type,mine_count):
 
             print colored('Game over!','red')
             quit()
-
         else:
+            # otherwise you clicked a number, clear the cell
             mask = recursive_clear(r,c,mask)
     elif move_type == 'flag':
         mask[r][c] = 2
@@ -175,6 +179,16 @@ def update_mask(board,mask,move,move_type,mine_count):
     elif move_type == 'unflag':
         mask[r][c] = 1
         mine_count += 1
+
+    # check if the game has been won
+    all_mines_flagged = (mine_count == 0) # count of flags equals count of mines
+    sum_of_mask_values = sum(sum(mask,[])) # sums flattened mask list
+    all_other_cells_cleared = (sum_of_mask_values == len(mine_locations)*2) # all cells cleared except flags, which are 2's
+    if all_mines_flagged & all_other_cells_cleared:
+        os.system('clear')
+        print_board(board,mask,mine_count)
+        print colored('You won!','green')
+        quit()
 
     return mask,mine_count
 
