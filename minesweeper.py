@@ -6,7 +6,7 @@ BOARD_WIDTH = 10
 BOARD_HEIGHT = 10
 
 def create_mask(value):
-    ''' reate mask as list of lists (list of rows) of repeated value input '''
+    ''' create mask as list of lists (list of rows) of repeated value input '''
 
     if type(value) != int:
         raise ValueError('Mask value must be int.')
@@ -42,7 +42,7 @@ def get_neighbors(r,c):
     return valid_neighbors
 
 def create_board():
-    '''create board with mines and adjacency counts, plus full mask'''
+    ''' create board with mines and adjacency counts '''
 
     # create board as list of lists (list of rows)
     board = []
@@ -133,7 +133,7 @@ def update_mask(board,mask,move):
 
     # if coordinates are a mine, game over
     if board[r][c] == "*":
-        clear_mask = create_mask(0,size)
+        clear_mask = create_mask(0)
         print_board(board,clear_mask)
 
         print "Game over!"
