@@ -221,8 +221,8 @@ if __name__ == "__main__":
 
     # handle custom board parameters
     if len(sys.argv) > 2:
-        BOARD_WIDTH = int(sys.argv[1])
-        BOARD_HEIGHT = int(sys.argv[2])
+        BOARD_HEIGHT = int(sys.argv[1])
+        BOARD_WIDTH = int(sys.argv[2])
     if len(sys.argv) > 3:
         MINE_DENSITY = float(sys.argv[3])
 
