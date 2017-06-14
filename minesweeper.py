@@ -100,17 +100,17 @@ def get_input():
         r,c = user_input.split(",")
         r = int(r)
         c = int(c)
-        if mask[r][c] == 0:
-            print "This block has already been clicked. Try again:"
-            move = get_input()
         if not valid_space(r,c):
             print "Your move is not on the board. Try again:"
-            move = get_input()
+            move,move_type = get_input()
+        elif mask[r][c] == 0:
+            print "This block has already been clicked. Try again:"
+            move,move_type = get_input()
         else:
             move = (r,c)
     except ValueError:
          print "Please use the format specified, e.g., '0,0'"
-         move = get_input()
+         move,move_type = get_input()
 
     return (move,move_type)
 
